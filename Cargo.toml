@@ -1,0 +1,12 @@
+[package]
+name = "advent-of-code-2023"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+colored = "2.0.4"
+env_logger = { version = "0.10", default-features = false }
+log = "0.4"
+nom = "7.1"
+thiserror = "1"
