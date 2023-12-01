@@ -10,3 +10,4 @@ env_logger = { version = "0.10", default-features = false }
 log = "0.4"
 nom = "7.1"
 thiserror = "1"
+type-toppings = "0.1.1"

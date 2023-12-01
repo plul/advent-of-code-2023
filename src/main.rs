@@ -33,6 +33,7 @@ mod my_nom_prelude {
     pub use nom::combinator::*;
     pub use nom::multi::*;
     pub use nom::sequence::*;
+    pub use nom::AsChar;
     pub use nom::Finish;
     pub use nom::IResult;
 }
@@ -58,7 +59,7 @@ fn main() {
         }
     } else {
         solve(1, 1);
-        // solve(1, 2);
+        solve(1, 2);
         // solve(2, 1);
         // solve(2, 2);
         // solve(3, 1);
