@@ -6,7 +6,7 @@ use std::time::Instant;
 mod day_01;
 mod day_02;
 mod day_03;
-// mod day_04;
+mod day_04;
 // mod day_05;
 // mod day_06;
 // mod day_07;
@@ -79,8 +79,8 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         (2, 2) => day_02::part_2(&input?).to_string(),
         (3, 1) => day_03::part_1(&input?).to_string(),
         (3, 2) => day_03::part_2(&input?).to_string(),
-        // (4, 1) => day_04::part_1(&input?).to_string(),
-        // (4, 2) => day_04::part_2(&input?).to_string(),
+        (4, 1) => day_04::part_1(&input?).to_string(),
+        (4, 2) => day_04::part_2(&input?).to_string(),
         // (5, 1) => day_05::part_1(&input?).to_string(),
         // (5, 2) => day_05::part_2(&input?).to_string(),
         // (6, 1) => day_06::part_1(&input?).to_string(),
