@@ -4,7 +4,7 @@ use std::path::Path;
 use std::time::Instant;
 
 mod day_01;
-// mod day_02;
+mod day_02;
 // mod day_03;
 // mod day_04;
 // mod day_05;
@@ -46,72 +46,37 @@ struct Cli {
     part: Option<usize>,
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::builder().parse_default_env().init();
     let cli = Cli::parse();
 
     if let Some(day) = cli.day {
         if let Some(part) = cli.part {
-            solve(day, part);
+            solve(day, part)?;
         } else {
-            solve(day, 1);
-            solve(day, 2);
+            solve(day, 1)?;
+            solve(day, 2)?;
         }
     } else {
-        solve(1, 1);
-        solve(1, 2);
-        // solve(2, 1);
-        // solve(2, 2);
-        // solve(3, 1);
-        // solve(3, 2);
-        // solve(4, 1);
-        // solve(4, 2);
-        // solve(5, 1);
-        // solve(5, 2);
-        // solve(6, 1);
-        // solve(6, 2);
-        // solve(7, 1);
-        // solve(7, 2);
-        // solve(8, 1);
-        // solve(8, 2);
-        // solve(9, 1);
-        // solve(9, 2);
-        // solve(10, 1);
-        // solve(10, 2);
-        // solve(11, 1);
-        // solve(11, 2);
-        // solve(12, 1);
-        // solve(12, 2);
-        // solve(13, 1);
-        // solve(13, 2);
-        // solve(14, 1);
-        // solve(14, 2);
-        // solve(15, 1);
-        // solve(15, 2);
-        // solve(16, 1);
-        // solve(16, 2);
-        // solve(17, 1);
-        // solve(17, 2);
-        // solve(18, 1);
-        // solve(18, 2);
-        // solve(19, 1);
-        // solve(19, 2);
-        // solve(20, 1);
-        // solve(20, 2);
-        // solve(21, 1);
-        // solve(21, 2);
+        for day in 1..=25 {
+            for part in 1..=2 {
+                solve(day, part)?;
+            }
+        }
     }
+
+    Ok(())
 }
 
-fn solve(day: usize, part: usize) {
+fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
     let input = read_input(format!("day_{day:02}.txt"));
 
     let now = Instant::now();
     let solution = match (day, part) {
-        (1, 1) => day_01::part_1(&input).to_string(),
-        (1, 2) => day_01::part_2(&input).to_string(),
-        // (2, 1) => day_02::part_1(&input).to_string(),
-        // (2, 2) => day_02::part_2(&input).to_string(),
+        (1, 1) => day_01::part_1(&input?).to_string(),
+        (1, 2) => day_01::part_2(&input?).to_string(),
+        (2, 1) => day_02::part_1(&input?).to_string(),
+        (2, 2) => day_02::part_2(&input?).to_string(),
         // (3, 1) => day_03::part_1(&input).to_string(),
         // (3, 2) => day_03::part_2(&input).to_string(),
         // (4, 1) => day_04::part_1(&input).to_string(),
@@ -150,7 +115,7 @@ fn solve(day: usize, part: usize) {
         // (20, 2) => day_20::part_2(&input).to_string(),
         // (21, 1) => day_21::part_1(&input).to_string(),
         // (21, 2) => day_21::part_2(&input).to_string(),
-        _ => panic!(),
+        _ => return Ok(()),
     };
     let elapsed = now.elapsed();
 
@@ -162,8 +127,10 @@ fn solve(day: usize, part: usize) {
     };
 
     println!("{time:>10}    Day {day} Part {part}: {solution}");
+
+    Ok(())
 }
 
-fn read_input(path: impl AsRef<Path>) -> String {
-    std::fs::read_to_string(Path::new("input").join(path)).unwrap()
+fn read_input(path: impl AsRef<Path>) -> Result<String, std::io::Error> {
+    std::fs::read_to_string(Path::new("input").join(path))
 }
