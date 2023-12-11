@@ -10,17 +10,18 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
     ""
 }
 
+struct Line {}
+
 mod parser {
     use super::*;
     use crate::my_nom_prelude::*;
+    use type_toppings::ResultExt as _;
 
-    pub(super) fn parse(s: &str) -> Vec<()> {
-        all_consuming(terminated(separated_list1(line_ending, main_parser), multispace0))(s)
-            .unwrap()
-            .1
+    pub(super) fn parse(s: &str) -> Vec<Line> {
+        s.lines().map(|line| all_consuming(parse_line)(line).expect_or_report(line).1).collect()
     }
 
-    fn main_parser(s: &str) -> IResult<&str, ()> {
+    fn parse_line(s: &str) -> IResult<&str, Line> {
         Ok((s, ()))
     }
 }
