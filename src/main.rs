@@ -12,7 +12,7 @@ mod day_04;
 // mod day_07;
 // mod day_08;
 // mod day_09;
-// mod day_10;
+mod day_10;
 // mod day_11;
 mod day_12;
 // mod day_13;
@@ -24,6 +24,10 @@ mod day_12;
 // mod day_19;
 // mod day_20;
 // mod day_21;
+// mod day_22;
+// mod day_23;
+// mod day_24;
+// mod day_25;
 
 mod my_nom_prelude {
     pub use crate::lib::nom_ext::complete::parse_usize;
@@ -105,8 +109,8 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         // (8, 2) => day_08::part_2(&input?).to_string(),
         // (9, 1) => day_09::part_1(&input?).to_string(),
         // (9, 2) => day_09::part_2(&input?).to_string(),
-        // (10, 1) => day_10::part_1(&input?).to_string(),
-        // (10, 2) => day_10::part_2(&input?).to_string(),
+        (10, 1) => day_10::part_1(&input?).to_string(),
+        (10, 2) => day_10::part_2(&input?).to_string(),
         // (11, 1) => day_11::part_1(&input?).to_string(),
         // (11, 2) => day_11::part_2(&input?).to_string(),
         (12, 1) => day_12::part_1(&input?).to_string(),
@@ -129,6 +133,14 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         // (20, 2) => day_20::part_2(&input?).to_string(),
         // (21, 1) => day_21::part_1(&input?).to_string(),
         // (21, 2) => day_21::part_2(&input?).to_string(),
+        // (22, 1) => day_21::part_1(&input?).to_string(),
+        // (22, 2) => day_21::part_2(&input?).to_string(),
+        // (23, 1) => day_21::part_1(&input?).to_string(),
+        // (23, 2) => day_21::part_2(&input?).to_string(),
+        // (24, 1) => day_21::part_1(&input?).to_string(),
+        // (24, 2) => day_21::part_2(&input?).to_string(),
+        // (25, 1) => day_21::part_1(&input?).to_string(),
+        // (25, 2) => day_21::part_2(&input?).to_string(),
         _ => return Ok(()),
     };
     let elapsed = now.elapsed();
