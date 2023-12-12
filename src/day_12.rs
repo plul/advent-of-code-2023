@@ -1,46 +1,43 @@
 //! https://adventofcode.com/2023/day/12
 
 use crate::my_nom_prelude::*;
+use rayon::iter::IntoParallelIterator as _;
+use rayon::iter::ParallelIterator as _;
+use std::collections::HashMap;
 
 pub fn part_1(input: &str) -> impl std::fmt::Display {
     parser::parse(input)
-        .into_iter()
-        .map(|row| valid_arrangements(&row.springs, &row.groups))
+        .into_par_iter()
+        .map(|row| valid_arrangements(&row.springs, &row.groups, &mut HashMap::new()))
         .sum::<u64>()
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
     parser::parse(input)
-        .into_iter()
+        .into_par_iter()
         .map(|row| {
             let mut springs = vec![];
             let mut groups = vec![];
-            for _ in 0..5 {
+            for _ in 0..4 {
                 springs.extend(&row.springs);
+                springs.push(Spring::Unknown);
                 groups.extend(&row.groups);
             }
+            springs.extend(row.springs);
+            groups.extend(row.groups);
             Row { springs, groups }
         })
-        .inspect(|row| {
-            let s: String = row.springs.iter().map(ToString::to_string).collect();
-            println!("{}", s);
-        })
-        .map(|row| valid_arrangements(&row.springs, &row.groups))
+        .map(|row| valid_arrangements(&row.springs, &row.groups, &mut HashMap::new()))
         .sum::<u64>()
 }
 
 /// Contiguous group of damaged springs
-type ContiguousGroup = u64;
+type ContiguousGroup = usize;
 
-#[derive(Debug, Copy, Clone, derive_more::Display)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum Spring {
-    #[display(fmt = ".")]
     Operational,
-
-    #[display(fmt = "#")]
     Damaged,
-
-    #[display(fmt = "?")]
     Unknown,
 }
 
@@ -51,97 +48,58 @@ struct Row {
 }
 
 /// Returns the number of different (valid) arrangements
-fn valid_arrangements(springs: &[Spring], groups: &[ContiguousGroup]) -> u64 {
-    if can_be_ruled_out(springs, groups) {
+fn valid_arrangements<'a>(
+    springs: &'a [Spring],
+    groups: &'a [ContiguousGroup],
+    cache: &mut HashMap<(&'a [Spring], &'a [ContiguousGroup]), u64>,
+) -> u64 {
+    if groups.is_empty() {
+        if springs.contains(&Spring::Damaged) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+    if springs.is_empty() {
         return 0;
     }
 
-    let mut split = springs.splitn(2, |s| matches!(s, Spring::Unknown));
-    if let (Some(left), Some(right)) = (split.next(), split.next()) {
-        let operational: Vec<Spring> = left
-            .into_iter()
-            .copied()
-            .chain(std::iter::once(Spring::Operational))
-            .chain(right.into_iter().copied())
-            .collect();
-        let damaged: Vec<Spring> = left
-            .into_iter()
-            .copied()
-            .chain(std::iter::once(Spring::Damaged))
-            .chain(right.into_iter().copied())
-            .collect();
-        valid_arrangements(&operational, groups) + valid_arrangements(&damaged, groups)
-    } else {
-        // No ? left
-        if is_valid_arrangement(springs, groups) { 1 } else { 0 }
+    if let Some(sum) = cache.get(&(springs, groups)) {
+        return *sum;
     }
-}
 
-/// Returns true if the arrangement is valid (and there are no ? occurrences).
-fn is_valid_arrangement(springs: &[Spring], groups: &[ContiguousGroup]) -> bool {
-    let s: String = springs.iter().map(ToString::to_string).collect();
-    let mut s: &str = s.as_str();
+    let mut sum = 0;
 
-    s = match many0(tag("."))(s) {
-        Ok((s, _)) => s,
-        Err::<_, nom::Err<()>>(_) => return false,
-    };
-    let mut groups = groups.iter().peekable();
-    while let Some(group) = groups.next() {
-        s = match count(tag("#"), *group as usize)(s) {
-            Ok((s, _)) => s,
-            Err::<_, nom::Err<()>>(_) => return false,
-        };
+    // Grab the size of the next contiguous group of damaged springs
+    let g = *groups.first().unwrap();
 
-        if groups.peek().is_some() {
-            s = match many1(tag("."))(s) {
-                Ok((s, _)) => s,
-                Err::<_, nom::Err<()>>(_) => return false,
-            };
+    // 1. Check if there are enough #/? to place a group here, and the following spring is not a damaged spring (because then it would have to be included in the contiguous group)
+    if springs.len() >= g
+        && springs.iter().take(g).all(|s| matches!(s, Spring::Damaged | Spring::Unknown))
+        && !matches!(springs.get(g), Some(Spring::Damaged))
+    {
+        // Pop the front group
+        let groups = groups.split_first().unwrap().1;
+
+        // Pop the a number of #/? corresponding to the size of the group
+        let mut springs = springs.split_at(g).1;
+
+        // If a spring follows, pop that too, as spacing before the next group
+        if !springs.is_empty() {
+            springs = springs.split_first().unwrap().1;
         }
+
+        sum += valid_arrangements(springs, groups, cache);
     }
-    s = match many0(tag("."))(s) {
-        Ok((s, _)) => s,
-        Err::<_, nom::Err<()>>(_) => return false,
-    };
-
-    s.is_empty()
-}
-
-/// Returns true if it can be determined that this can never result in a valid arrangement, based on the prefix of the springs string up until the first occurrence of a '?'.
-fn can_be_ruled_out(springs: &[Spring], groups: &[ContiguousGroup]) -> bool {
-    let s: String = springs.iter().map(ToString::to_string).collect();
-    let mut s: &str = s.as_str();
-    s = s.split('?').next().unwrap();
-
-    s = match many0(nom::bytes::streaming::tag("."))(s) {
-        Ok((s, _)) => s,
-        Err::<_, nom::Err<()>>(err) => match err {
-            nom::Err::Incomplete(_) => return false,
-            _ => unreachable!(),
-        },
-    };
-    let mut groups = groups.iter().peekable();
-    while let Some(group) = groups.next() {
-        s = match count(nom::bytes::streaming::tag("#"), *group as usize)(s) {
-            Ok((s, _)) => s,
-            Err::<_, nom::Err<()>>(err) => match err {
-                nom::Err::Incomplete(_) => return false,
-                _ => return true,
-            },
-        };
-
-        if groups.peek().is_some() {
-            s = match many1(nom::bytes::streaming::tag("."))(s) {
-                Ok((s, _)) => s,
-                Err::<_, nom::Err<()>>(err) => match err {
-                    nom::Err::Incomplete(_) => return false,
-                    _ => return true,
-                },
-            };
-        }
+    // 2. If the first spring here is not a damaged one, we also have the option of not placing a group here
+    if !matches!(springs.first(), Some(Spring::Damaged)) && !springs.is_empty() {
+        let springs = springs.split_first().unwrap().1;
+        sum += valid_arrangements(springs, groups, cache);
     }
-    false
+
+    cache.insert((springs, groups), sum);
+
+    sum
 }
 
 mod parser {
@@ -158,11 +116,8 @@ mod parser {
             map(tag("#"), |_| Spring::Damaged),
             map(tag("?"), |_| Spring::Unknown),
         )))(s)?;
-
         let (s, _) = tag(" ")(s)?;
-
-        let (s, groups) = separated_list1(tag(","), u64)(s)?;
-
+        let (s, groups) = separated_list1(tag(","), parse_usize)(s)?;
         let row = Row { springs, groups };
         Ok((s, row))
     }
@@ -185,29 +140,5 @@ fn part_1_example() {
 
 #[test]
 fn part_2_example() {
-    assert_eq!(part_2(EXAMPLE).to_string(), "");
-}
-
-#[test]
-fn test_valid_arrangements() {
-    let Row { springs, groups } = &parser::parse("#.#.### 1,1,3")[0];
-    assert!(is_valid_arrangement(&springs, &groups));
-
-    let Row { springs, groups } = &parser::parse("##..### 1,1,3")[0];
-    assert!(!is_valid_arrangement(&springs, &groups));
-}
-
-#[test]
-fn test_can_be_ruled_out() {
-    let Row { springs, groups } = &parser::parse("#.#.### 1,1,3")[0];
-    assert!(!can_be_ruled_out(&springs, &groups));
-
-    let Row { springs, groups } = &parser::parse("##..### 1,1,3")[0];
-    assert!(can_be_ruled_out(&springs, &groups));
-
-    let Row { springs, groups } = &parser::parse("##..??? 1,1,3")[0];
-    assert!(can_be_ruled_out(&springs, &groups));
-
-    let Row { springs, groups } = &parser::parse("#??.### 1,1,3")[0];
-    assert!(!can_be_ruled_out(&springs, &groups));
+    assert_eq!(part_2(EXAMPLE).to_string(), "525152");
 }

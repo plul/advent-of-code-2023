@@ -26,6 +26,7 @@ mod day_12;
 // mod day_21;
 
 mod my_nom_prelude {
+    pub use crate::lib::nom_ext::complete::parse_usize;
     pub use nom::branch::*;
     pub use nom::bytes::complete::*;
     pub use nom::character::complete::*;
@@ -38,7 +39,20 @@ mod my_nom_prelude {
     pub use nom::IResult;
 }
 
-mod lib {}
+mod lib {
+    /// Utility parsers for nom
+    pub mod nom_ext {
+        pub mod complete {
+            use nom::character::complete::digit1;
+            use nom::combinator::map_res;
+            use nom::IResult;
+
+            pub fn parse_usize(s: &str) -> IResult<&str, usize> {
+                map_res(digit1, |s: &str| s.parse::<usize>())(s)
+            }
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 struct Cli {
