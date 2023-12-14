@@ -6,7 +6,6 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
-    let input = parser::parse(input);
     ""
 }
 
