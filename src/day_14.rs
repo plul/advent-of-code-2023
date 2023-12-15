@@ -11,7 +11,6 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
 pub fn part_2(input: &str) -> impl std::fmt::Display {
     let mut lines: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let mut cache_opt = Some(HashMap::new());
-    cache_opt.as_mut().unwrap().insert(lines.clone(), 0);
 
     let mut cycle = 1;
     while cycle <= 1000000000 {
@@ -33,7 +32,8 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
 
         // Check for repetition
         if let Some(cache) = cache_opt.as_mut() {
-            if let Some(cached) = cache.get(&lines) {
+            let key = lines.iter().flat_map(|line| line.into_iter()).collect::<String>();
+            if let Some(cached) = cache.get(&key) {
                 log::info!("Repetition detected after {cycle} cycles");
 
                 let cycle_len = cycle - cached;
@@ -44,7 +44,7 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
                 // Drop cache
                 cache_opt = None;
             } else {
-                cache.insert(lines.clone(), cycle);
+                cache.insert(key, cycle);
             }
         }
 
