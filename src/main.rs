@@ -17,7 +17,7 @@ mod day_10;
 mod day_12;
 // mod day_13;
 mod day_14;
-// mod day_15;
+mod day_15;
 // mod day_16;
 // mod day_17;
 // mod day_18;
@@ -119,8 +119,8 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         // (13, 2) => day_13::part_2(&input?).to_string(),
         (14, 1) => day_14::part_1(&input?).to_string(),
         (14, 2) => day_14::part_2(&input?).to_string(),
-        // (15, 1) => day_15::part_1(&input?).to_string(),
-        // (15, 2) => day_15::part_2(&input?).to_string(),
+        (15, 1) => day_15::part_1(&input?).to_string(),
+        (15, 2) => day_15::part_2(&input?).to_string(),
         // (16, 1) => day_16::part_1(&input?).to_string(),
         // (16, 2) => day_16::part_2(&input?).to_string(),
         // (17, 1) => day_17::part_1(&input?).to_string(),
