@@ -18,7 +18,7 @@ mod day_12;
 // mod day_13;
 mod day_14;
 mod day_15;
-// mod day_16;
+mod day_16;
 // mod day_17;
 // mod day_18;
 // mod day_19;
@@ -44,6 +44,146 @@ mod my_nom_prelude {
 }
 
 mod lib {
+    /// Grid helpers for rectangular inputs
+    pub mod grid {
+        pub struct Grid<Tile> {
+            pub rows: Vec<Vec<Tile>>,
+        }
+        impl<Tile> std::ops::Index<Pos> for Grid<Tile> {
+            type Output = Tile;
+
+            fn index(&self, pos: Pos) -> &Self::Output {
+                let (row, col) = pos;
+                assert!(row >= 0);
+                assert!(col >= 0);
+                let (row, col) = (row as usize, col as usize);
+                let row = &self.rows[row];
+                &row[col]
+            }
+        }
+        impl<Tile> std::ops::IndexMut<Pos> for Grid<Tile> {
+            fn index_mut(&mut self, pos: Pos) -> &mut Self::Output {
+                let (row, col) = pos;
+                assert!(row >= 0);
+                assert!(col >= 0);
+                let (row, col) = (row as usize, col as usize);
+                let row = &mut self.rows[row];
+                &mut row[col]
+            }
+        }
+        impl<Tile> Grid<Tile> {
+            pub fn n_rows(&self) -> usize {
+                self.rows.len()
+            }
+
+            pub fn n_cols(&self) -> usize {
+                self.rows[0].len()
+            }
+
+            pub fn contains_pos(&self, pos: Pos) -> bool {
+                let (row, col) = pos;
+                let n_rows = self.n_rows() as isize;
+                let n_cols = self.n_cols() as isize;
+                (0 <= row && row < n_rows) && (0 <= col && col < n_cols)
+            }
+
+            pub fn iter(&self) -> impl Iterator<Item = (Pos, &Tile)> {
+                self.rows
+                    .iter()
+                    .enumerate()
+                    .flat_map(|(row, cols)| cols.iter().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
+            }
+
+            pub fn iter_mut(&mut self) -> impl Iterator<Item = (Pos, &mut Tile)> {
+                self.rows
+                    .iter_mut()
+                    .enumerate()
+                    .flat_map(|(row, cols)| cols.iter_mut().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
+            }
+
+            pub fn into_iter(self) -> impl Iterator<Item = (Pos, Tile)> {
+                self.rows
+                    .into_iter()
+                    .enumerate()
+                    .flat_map(|(row, cols)| cols.into_iter().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
+            }
+
+            #[allow(dead_code)]
+            pub fn dbg<F, S>(&self, fmt: F)
+            where
+                F: Fn(&Tile) -> S,
+                S: std::fmt::Display,
+            {
+                for row in &self.rows {
+                    for tile in row {
+                        print!("{}", fmt(tile));
+                    }
+                    println!();
+                }
+            }
+        }
+
+        /// Row, Column.
+        ///
+        /// (2, 8) is
+        /// +-----------
+        /// |
+        /// |       X <- here
+        /// |
+        pub type Pos = (isize, isize);
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub enum Dir {
+            N,
+            W,
+            S,
+            E,
+        }
+
+        #[derive(Clone, Copy)]
+        pub struct PosDir {
+            pub pos: Pos,
+            pub dir: Dir,
+        }
+        impl std::fmt::Debug for PosDir {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "at {:?}, facing {:?}", self.pos, self.dir)
+            }
+        }
+        impl PosDir {
+            pub fn step_forward(&self) -> PosDir {
+                let (row, col) = self.pos;
+                let pos = match self.dir {
+                    Dir::N => (row - 1, col),
+                    Dir::W => (row, col - 1),
+                    Dir::S => (row + 1, col),
+                    Dir::E => (row, col + 1),
+                };
+                PosDir { pos, dir: self.dir }
+            }
+
+            pub fn turn_left(&self) -> PosDir {
+                let dir = match self.dir {
+                    Dir::N => Dir::W,
+                    Dir::W => Dir::S,
+                    Dir::S => Dir::E,
+                    Dir::E => Dir::N,
+                };
+                PosDir { pos: self.pos, dir }
+            }
+
+            pub fn turn_right(&self) -> PosDir {
+                let dir = match self.dir {
+                    Dir::N => Dir::E,
+                    Dir::W => Dir::N,
+                    Dir::S => Dir::W,
+                    Dir::E => Dir::S,
+                };
+                PosDir { pos: self.pos, dir }
+            }
+        }
+    }
+
     /// Utility parsers for nom
     pub mod nom_ext {
         pub mod complete {
@@ -121,8 +261,8 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         (14, 2) => day_14::part_2(&input?).to_string(),
         (15, 1) => day_15::part_1(&input?).to_string(),
         (15, 2) => day_15::part_2(&input?).to_string(),
-        // (16, 1) => day_16::part_1(&input?).to_string(),
-        // (16, 2) => day_16::part_2(&input?).to_string(),
+        (16, 1) => day_16::part_1(&input?).to_string(),
+        (16, 2) => day_16::part_2(&input?).to_string(),
         // (17, 1) => day_17::part_1(&input?).to_string(),
         // (17, 2) => day_17::part_2(&input?).to_string(),
         // (18, 1) => day_18::part_1(&input?).to_string(),
