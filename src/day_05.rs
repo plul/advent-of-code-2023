@@ -60,7 +60,7 @@ fn min_location_from_range(range: Range, maps: &[Map]) -> usize {
 
     let ranges: Vec<Range> = unchanged_ranges
         .into_iter()
-        .chain(mapped_ranges.into_iter())
+        .chain(mapped_ranges)
         .filter(|r| r.range_length > 0)
         .collect();
 

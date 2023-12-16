@@ -84,10 +84,8 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
                             first_digit_col: left,
                             value: part_number,
                         };
-                        if part_numbers
-                            .iter()
-                            .find(|p| p.row == part_number.row && p.first_digit_col == part_number.first_digit_col)
-                            .is_none()
+                        if !part_numbers
+                            .iter().any(|p| p.row == part_number.row && p.first_digit_col == part_number.first_digit_col)
                         {
                             part_numbers.push(part_number);
                         }

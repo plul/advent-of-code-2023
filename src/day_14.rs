@@ -32,7 +32,7 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
 
         // Check for repetition
         if let Some(cache) = cache_opt.as_mut() {
-            let key = lines.iter().flat_map(|line| line.into_iter()).collect::<String>();
+            let key = lines.iter().flat_map(|line| line.iter()).collect::<String>();
             if let Some(cached) = cache.get(&key) {
                 log::info!("Repetition detected after {cycle} cycles");
 
@@ -60,8 +60,8 @@ fn rotate_cw(lines: &Vec<Vec<char>>) -> Vec<Vec<char>> {
     let n_cols = lines[0].len();
     let mut new = vec![vec!['?'; n_rows]; n_cols];
     for row in 0..n_rows {
-        for col in 0..n_cols {
-            new[col][n_rows - row - 1] = lines[row][col];
+        for (col, item) in new.iter_mut().enumerate() {
+            item[n_rows - row - 1] = lines[row][col];
         }
     }
     new

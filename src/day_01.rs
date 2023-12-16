@@ -41,16 +41,16 @@ mod parser {
             let mid = i;
             let (_, s) = s.split_at(mid);
             match s {
-                _ if s.starts_with("0") => break '0',
-                _ if s.starts_with("1") => break '1',
-                _ if s.starts_with("2") => break '2',
-                _ if s.starts_with("3") => break '3',
-                _ if s.starts_with("4") => break '4',
-                _ if s.starts_with("5") => break '5',
-                _ if s.starts_with("6") => break '6',
-                _ if s.starts_with("7") => break '7',
-                _ if s.starts_with("8") => break '8',
-                _ if s.starts_with("9") => break '9',
+                _ if s.starts_with('0') => break '0',
+                _ if s.starts_with('1') => break '1',
+                _ if s.starts_with('2') => break '2',
+                _ if s.starts_with('3') => break '3',
+                _ if s.starts_with('4') => break '4',
+                _ if s.starts_with('5') => break '5',
+                _ if s.starts_with('6') => break '6',
+                _ if s.starts_with('7') => break '7',
+                _ if s.starts_with('8') => break '8',
+                _ if s.starts_with('9') => break '9',
                 _ => {}
             }
             i += 1;
@@ -62,16 +62,16 @@ mod parser {
             let mid = s.len() - i;
             let (s, _) = s.split_at(mid);
             match s {
-                _ if s.ends_with("0") => break '0',
-                _ if s.ends_with("1") => break '1',
-                _ if s.ends_with("2") => break '2',
-                _ if s.ends_with("3") => break '3',
-                _ if s.ends_with("4") => break '4',
-                _ if s.ends_with("5") => break '5',
-                _ if s.ends_with("6") => break '6',
-                _ if s.ends_with("7") => break '7',
-                _ if s.ends_with("8") => break '8',
-                _ if s.ends_with("9") => break '9',
+                _ if s.ends_with('0') => break '0',
+                _ if s.ends_with('1') => break '1',
+                _ if s.ends_with('2') => break '2',
+                _ if s.ends_with('3') => break '3',
+                _ if s.ends_with('4') => break '4',
+                _ if s.ends_with('5') => break '5',
+                _ if s.ends_with('6') => break '6',
+                _ if s.ends_with('7') => break '7',
+                _ if s.ends_with('8') => break '8',
+                _ if s.ends_with('9') => break '9',
                 _ => {}
             }
             i += 1;
@@ -87,16 +87,16 @@ mod parser {
             let mid = i;
             let (_, s) = s.split_at(mid);
             match s {
-                _ if s.starts_with("0") => break '0',
-                _ if s.starts_with("1") => break '1',
-                _ if s.starts_with("2") => break '2',
-                _ if s.starts_with("3") => break '3',
-                _ if s.starts_with("4") => break '4',
-                _ if s.starts_with("5") => break '5',
-                _ if s.starts_with("6") => break '6',
-                _ if s.starts_with("7") => break '7',
-                _ if s.starts_with("8") => break '8',
-                _ if s.starts_with("9") => break '9',
+                _ if s.starts_with('0') => break '0',
+                _ if s.starts_with('1') => break '1',
+                _ if s.starts_with('2') => break '2',
+                _ if s.starts_with('3') => break '3',
+                _ if s.starts_with('4') => break '4',
+                _ if s.starts_with('5') => break '5',
+                _ if s.starts_with('6') => break '6',
+                _ if s.starts_with('7') => break '7',
+                _ if s.starts_with('8') => break '8',
+                _ if s.starts_with('9') => break '9',
                 _ if s.starts_with("zero") => break '0',
                 _ if s.starts_with("one") => break '1',
                 _ if s.starts_with("two") => break '2',
@@ -118,16 +118,16 @@ mod parser {
             let mid = s.len() - i;
             let (s, _) = s.split_at(mid);
             match s {
-                _ if s.ends_with("0") => break '0',
-                _ if s.ends_with("1") => break '1',
-                _ if s.ends_with("2") => break '2',
-                _ if s.ends_with("3") => break '3',
-                _ if s.ends_with("4") => break '4',
-                _ if s.ends_with("5") => break '5',
-                _ if s.ends_with("6") => break '6',
-                _ if s.ends_with("7") => break '7',
-                _ if s.ends_with("8") => break '8',
-                _ if s.ends_with("9") => break '9',
+                _ if s.ends_with('0') => break '0',
+                _ if s.ends_with('1') => break '1',
+                _ if s.ends_with('2') => break '2',
+                _ if s.ends_with('3') => break '3',
+                _ if s.ends_with('4') => break '4',
+                _ if s.ends_with('5') => break '5',
+                _ if s.ends_with('6') => break '6',
+                _ if s.ends_with('7') => break '7',
+                _ if s.ends_with('8') => break '8',
+                _ if s.ends_with('9') => break '9',
                 _ if s.ends_with("zero") => break '0',
                 _ if s.ends_with("one") => break '1',
                 _ if s.ends_with("two") => break '2',

@@ -93,7 +93,7 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
             pos.go(dir, bounds).and_then(|p| p.go(inside, bounds)),
         ]
         .into_iter()
-        .filter_map(|p| p)
+        .flatten()
         {
             flood(&mut inside_of_loop, &pipe, flood_point, bounds);
         }
@@ -115,18 +115,14 @@ fn flood(filled: &mut HashSet<Pos>, pipe: &HashSet<Pos>, pos: Pos, bounds: Bound
     }
     filled.insert(pos);
 
-    for new_pos in [Dir::N, Dir::E, Dir::S, Dir::W]
-        .into_iter()
-        .map(|dir| pos.go(dir, bounds))
-        .filter_map(|pos| pos)
-    {
+    for new_pos in [Dir::N, Dir::E, Dir::S, Dir::W].into_iter().filter_map(|dir| pos.go(dir, bounds)) {
         if !filled.contains(&new_pos) && !pipe.contains(&new_pos) {
             flood(filled, pipe, new_pos, bounds);
         }
     }
 }
 
-fn find_start(lines: &Vec<Vec<char>>, bounds: Bounds) -> (Pos, Dir) {
+fn find_start(lines: &[Vec<char>], bounds: Bounds) -> (Pos, Dir) {
     // Find start
     let mut start = None;
     'outer: for (row, line) in lines.iter().enumerate() {
@@ -141,21 +137,17 @@ fn find_start(lines: &Vec<Vec<char>>, bounds: Bounds) -> (Pos, Dir) {
 
     // Find initial direction
     let initial_direction: Dir = 'init_dir: {
-        match start.go(Dir::N, bounds).and_then(|pos| char_at_pos(lines, pos)) {
-            Some('|' | 'F' | '7') => break 'init_dir Dir::N,
-            _ => {}
+        if let Some('|' | 'F' | '7') = start.go(Dir::N, bounds).and_then(|pos| char_at_pos(lines, pos)) {
+            break 'init_dir Dir::N;
         }
-        match start.go(Dir::E, bounds).and_then(|pos| char_at_pos(lines, pos)) {
-            Some('-' | 'J' | '7') => break 'init_dir Dir::E,
-            _ => {}
+        if let Some('-' | 'J' | '7') = start.go(Dir::E, bounds).and_then(|pos| char_at_pos(lines, pos)) {
+            break 'init_dir Dir::E;
         }
-        match start.go(Dir::S, bounds).and_then(|pos| char_at_pos(lines, pos)) {
-            Some('|' | 'J' | 'L') => break 'init_dir Dir::S,
-            _ => {}
+        if let Some('|' | 'J' | 'L') = start.go(Dir::S, bounds).and_then(|pos| char_at_pos(lines, pos)) {
+            break 'init_dir Dir::S;
         }
-        match start.go(Dir::W, bounds).and_then(|pos| char_at_pos(lines, pos)) {
-            Some('-' | 'F' | 'L') => break 'init_dir Dir::W,
-            _ => {}
+        if let Some('-' | 'F' | 'L') = start.go(Dir::W, bounds).and_then(|pos| char_at_pos(lines, pos)) {
+            break 'init_dir Dir::W;
         }
         panic!()
     };
@@ -164,7 +156,7 @@ fn find_start(lines: &Vec<Vec<char>>, bounds: Bounds) -> (Pos, Dir) {
 }
 
 /// Returns the positions of tiles that make up the pipe loop.
-fn trace_pipe(lines: &Vec<Vec<char>>, bounds: Bounds) -> Vec<Pos> {
+fn trace_pipe(lines: &[Vec<char>], bounds: Bounds) -> Vec<Pos> {
     let mut v = vec![];
 
     let (mut pos, mut dir): (Pos, Dir) = find_start(lines, bounds);
@@ -183,7 +175,7 @@ fn trace_pipe(lines: &Vec<Vec<char>>, bounds: Bounds) -> Vec<Pos> {
 }
 
 /// Takes single step along pipe and returns new position and direction.
-fn step(lines: &Vec<Vec<char>>, bounds: Bounds, pos: Pos, dir: Dir) -> (Pos, Option<Dir>) {
+fn step(lines: &[Vec<char>], bounds: Bounds, pos: Pos, dir: Dir) -> (Pos, Option<Dir>) {
     let pos = pos.go(dir, bounds).unwrap();
     let c = char_at_pos(lines, pos).unwrap();
     let dir = match (dir, c) {
@@ -207,7 +199,7 @@ fn step(lines: &Vec<Vec<char>>, bounds: Bounds, pos: Pos, dir: Dir) -> (Pos, Opt
 }
 
 /// Returns the character at a given position
-fn char_at_pos(lines: &Vec<Vec<char>>, pos: Pos) -> Option<char> {
+fn char_at_pos(lines: &[Vec<char>], pos: Pos) -> Option<char> {
     lines.get(pos.row).and_then(|line| line.get(pos.col)).copied()
 }
 
