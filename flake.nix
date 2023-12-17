@@ -30,6 +30,10 @@
             extensions = ["rust-src" "clippy"];
           };
 
+          beta-rust-toolchain = pkgs.rust-bin.beta.latest.minimal.override {
+            extensions = ["rust-src" "clippy"];
+          };
+
           nightly-rust-toolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
             toolchain.minimal.override {
               extensions = ["rust-src" "clippy"];
@@ -62,7 +66,7 @@
         devShells.default = pkgs.mkShell {
           packages = [
             config.formatter
-            config.packages.stable-rust-toolchain
+            config.packages.beta-rust-toolchain # For RPITIT
             config.packages.nightly-rust-analyzer
             config.packages.nightly-rustfmt
             config.packages.cargo-udeps

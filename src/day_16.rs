@@ -5,16 +5,16 @@ use crate::lib::grid::Grid;
 use crate::lib::grid::PosDir;
 
 pub fn part_1(input: &str) -> impl std::fmt::Display {
-    let mut grid: Grid<Tile> = parse_input(input);
+    let mut grid = Grid::parse_char_grid(input, Tile::new);
     let pos_dir = PosDir { pos: (0, -1), dir: Dir::E };
     propagate_light(&mut grid, pos_dir);
     grid.into_iter().filter(|(_pos, tile)| tile.is_energized()).count()
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
-    let mut grid: Grid<Tile> = parse_input(input);
-    let n_rows = grid.n_rows();
-    let n_cols = grid.n_cols();
+    let mut grid = Grid::parse_char_grid(input, Tile::new);
+    let n_rows = grid.n_rows;
+    let n_cols = grid.n_cols;
 
     let north_edge = (0..n_cols).map(|col| PosDir {
         pos: (-1, col as isize),
@@ -138,11 +138,6 @@ impl std::fmt::Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.c)
     }
-}
-
-fn parse_input(input: &str) -> Grid<Tile> {
-    let rows = input.lines().map(|line| line.chars().map(Tile::new).collect()).collect();
-    Grid { rows }
 }
 
 #[cfg(test)]

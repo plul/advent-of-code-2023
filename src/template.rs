@@ -26,16 +26,17 @@ mod parser {
 }
 
 #[cfg(test)]
-static EXAMPLE: &str = "\
-
-";
+fn example() -> &'static str {
+    &r#"
+"#[1..] // Skip the first line ending
+}
 
 #[test]
 fn part_1_example() {
-    assert_eq!(part_1(EXAMPLE).to_string(), "");
+    assert_eq!(part_1(example()).to_string(), "");
 }
 
 #[test]
 fn part_2_example() {
-    assert_eq!(part_2(EXAMPLE).to_string(), "");
+    assert_eq!(part_2(example()).to_string(), "");
 }
