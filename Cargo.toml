@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 colored = "2"
+derive_more = "0.99.17"
 env_logger = { version = "0.10", default-features = false }
 gcd = "2.3.0"
 log = "0.4"

@@ -20,7 +20,7 @@ mod day_14;
 mod day_15;
 mod day_16;
 mod day_17;
-// mod day_18;
+mod day_18;
 // mod day_19;
 // mod day_20;
 // mod day_21;
@@ -96,8 +96,8 @@ fn solve(day: usize, part: usize) -> Result<(), std::io::Error> {
         (16, 2) => day_16::part_2(&input?).to_string(),
         (17, 1) => day_17::part_1(&input?).to_string(),
         (17, 2) => day_17::part_2(&input?).to_string(),
-        // (18, 1) => day_18::part_1(&input?).to_string(),
-        // (18, 2) => day_18::part_2(&input?).to_string(),
+        (18, 1) => day_18::part_1(&input?).to_string(),
+        (18, 2) => day_18::part_2(&input?).to_string(),
         // (19, 1) => day_19::part_1(&input?).to_string(),
         // (19, 2) => day_19::part_2(&input?).to_string(),
         // (20, 1) => day_20::part_1(&input?).to_string(),
@@ -137,6 +137,7 @@ mod my_nom_prelude {
     pub use nom::branch::*;
     pub use nom::bytes::complete::*;
     pub use nom::character::complete::*;
+    pub use nom::character::*;
     pub use nom::combinator::*;
     pub use nom::multi::*;
     pub use nom::sequence::*;
@@ -147,86 +148,166 @@ mod my_nom_prelude {
 mod lib {
     /// Grid helpers for rectangular inputs
     pub mod grid {
-        pub struct Grid<Tile> {
-            pub rows: Vec<Vec<Tile>>,
-            pub n_rows: usize,
-            pub n_cols: usize,
-        }
-        impl<Tile> std::ops::Index<Pos> for Grid<Tile> {
-            type Output = Tile;
+        pub mod hash_map {
+            //! Grid implemented with `HashMap<Pos, Tile>`.
+            use super::*;
+            use std::cmp::max;
+            use std::cmp::min;
+            use std::collections::HashMap;
 
-            fn index(&self, pos: Pos) -> &Self::Output {
-                let (row, col) = pos;
-                assert!(row >= 0);
-                assert!(col >= 0);
-                let (row, col) = (row as usize, col as usize);
-                let row = &self.rows[row];
-                &row[col]
+            #[derive(derive_more::Index, derive_more::IndexMut, derive_more::IntoIterator)]
+            pub struct Grid<Tile> {
+                #[index]
+                #[index_mut]
+                #[into_iterator(owned, ref)]
+                tiles: HashMap<Pos, Tile>,
+
+                bounds: Bounds,
             }
-        }
-        impl<Tile> std::ops::IndexMut<Pos> for Grid<Tile> {
-            fn index_mut(&mut self, pos: Pos) -> &mut Self::Output {
-                let (row, col) = pos;
-                assert!(row >= 0);
-                assert!(col >= 0);
-                let (row, col) = (row as usize, col as usize);
-                let row = &mut self.rows[row];
-                &mut row[col]
-            }
-        }
-        impl<Tile> Grid<Tile> {
-            pub fn parse_char_grid<F>(input: &str, parse_tile: F) -> Self
-            where
-                F: Fn(char) -> Tile,
-            {
-                let rows: Vec<Vec<Tile>> = input.lines().map(|line| line.chars().map(&parse_tile).collect()).collect();
-                let n_rows = rows.len();
-                let n_cols = rows[0].len();
-                for row in &rows {
-                    assert_eq!(row.len(), n_cols, "At least one row is not the same length as the first row");
+            impl<Tile> AsRef<HashMap<Pos, Tile>> for Grid<Tile> {
+                fn as_ref(&self) -> &HashMap<Pos, Tile> {
+                    &self.tiles
                 }
-                Grid { rows, n_rows, n_cols }
             }
-
-            pub fn contains_pos(&self, pos: Pos) -> bool {
-                let (row, col) = pos;
-                let n_rows = self.n_rows as isize;
-                let n_cols = self.n_cols as isize;
-                (0 <= row && row < n_rows) && (0 <= col && col < n_cols)
-            }
-
-            pub fn iter(&self) -> impl Iterator<Item = (Pos, &Tile)> {
-                self.rows
-                    .iter()
-                    .enumerate()
-                    .flat_map(|(row, cols)| cols.iter().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
-            }
-
-            pub fn iter_mut(&mut self) -> impl Iterator<Item = (Pos, &mut Tile)> {
-                self.rows
-                    .iter_mut()
-                    .enumerate()
-                    .flat_map(|(row, cols)| cols.iter_mut().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
-            }
-
-            pub fn into_iter(self) -> impl Iterator<Item = (Pos, Tile)> {
-                self.rows
-                    .into_iter()
-                    .enumerate()
-                    .flat_map(|(row, cols)| cols.into_iter().enumerate().map(move |(col, tile)| ((row as isize, col as isize), tile)))
-            }
-
-            #[allow(dead_code)]
-            pub fn dbg<F, S>(&self, fmt: F)
-            where
-                F: Fn(&Tile) -> S,
-                S: std::fmt::Display,
-            {
-                for row in &self.rows {
-                    for tile in row {
-                        print!("{}", fmt(tile));
+            impl<Tile> Grid<Tile> {
+                pub fn new() -> Grid<Tile> {
+                    Grid {
+                        tiles: HashMap::new(),
+                        bounds: Bounds::default(),
                     }
-                    println!();
+                }
+
+                pub fn insert(&mut self, pos: Pos, tile: Tile) -> Option<Tile> {
+                    self.expand_bounds(pos);
+                    self.tiles.insert(pos, tile)
+                }
+
+                fn expand_bounds(&mut self, pos: Pos) {
+                    let Pos(row, col) = pos;
+                    self.bounds.min_row = min(self.bounds.min_row, row);
+                    self.bounds.max_row = max(self.bounds.max_row, row);
+                    self.bounds.min_col = min(self.bounds.min_col, col);
+                    self.bounds.max_col = max(self.bounds.max_col, col);
+                }
+
+                pub fn contains_pos(&self, pos: &Pos) -> bool {
+                    self.tiles.contains_key(pos)
+                }
+
+                pub fn bounds(&self) -> Bounds {
+                    self.bounds
+                }
+
+                #[allow(dead_code)]
+                pub fn dbg<F, S>(&self, fmt: F)
+                where
+                    F: Fn(Option<&Tile>) -> S,
+                    S: std::fmt::Display,
+                {
+                    let Bounds {
+                        min_row,
+                        max_row,
+                        min_col,
+                        max_col,
+                    } = self.bounds;
+                    for row in min_row..=max_row {
+                        for col in min_col..=max_col {
+                            let tile = self.tiles.get(&Pos(row, col));
+                            print!("{}", fmt(tile));
+                        }
+                        println!();
+                    }
+                }
+            }
+        }
+
+        pub mod vec_of_vecs {
+            //! Grid implemented with `Vec<Vec<Tile>>`.
+            use super::*;
+
+            pub struct Grid<Tile> {
+                pub rows: Vec<Vec<Tile>>,
+                pub n_rows: usize,
+                pub n_cols: usize,
+            }
+            impl<Tile> std::ops::Index<Pos> for Grid<Tile> {
+                type Output = Tile;
+
+                fn index(&self, pos: Pos) -> &Self::Output {
+                    let Pos(row, col) = pos;
+                    assert!(row >= 0);
+                    assert!(col >= 0);
+                    let (row, col) = (row as usize, col as usize);
+                    let row = &self.rows[row];
+                    &row[col]
+                }
+            }
+            impl<Tile> std::ops::IndexMut<Pos> for Grid<Tile> {
+                fn index_mut(&mut self, pos: Pos) -> &mut Self::Output {
+                    let Pos(row, col) = pos;
+                    assert!(row >= 0);
+                    assert!(col >= 0);
+                    let (row, col) = (row as usize, col as usize);
+                    let row = &mut self.rows[row];
+                    &mut row[col]
+                }
+            }
+            impl<Tile> Grid<Tile> {
+                pub fn parse_char_grid<F>(input: &str, parse_tile: F) -> Self
+                where
+                    F: Fn(char) -> Tile,
+                {
+                    let rows: Vec<Vec<Tile>> = input.lines().map(|line| line.chars().map(&parse_tile).collect()).collect();
+                    let n_rows = rows.len();
+                    let n_cols = rows[0].len();
+                    for row in &rows {
+                        assert_eq!(row.len(), n_cols, "At least one row is not the same length as the first row");
+                    }
+                    Grid { rows, n_rows, n_cols }
+                }
+
+                pub fn contains_pos(&self, pos: Pos) -> bool {
+                    let Pos(row, col) = pos;
+                    let n_rows = self.n_rows as isize;
+                    let n_cols = self.n_cols as isize;
+                    (0 <= row && row < n_rows) && (0 <= col && col < n_cols)
+                }
+
+                pub fn iter(&self) -> impl Iterator<Item = (Pos, &Tile)> {
+                    self.rows
+                        .iter()
+                        .enumerate()
+                        .flat_map(|(row, cols)| cols.iter().enumerate().map(move |(col, tile)| (Pos(row as isize, col as isize), tile)))
+                }
+
+                pub fn iter_mut(&mut self) -> impl Iterator<Item = (Pos, &mut Tile)> {
+                    self.rows.iter_mut().enumerate().flat_map(|(row, cols)| {
+                        cols.iter_mut()
+                            .enumerate()
+                            .map(move |(col, tile)| (Pos(row as isize, col as isize), tile))
+                    })
+                }
+
+                pub fn into_iter(self) -> impl Iterator<Item = (Pos, Tile)> {
+                    self.rows.into_iter().enumerate().flat_map(|(row, cols)| {
+                        cols.into_iter()
+                            .enumerate()
+                            .map(move |(col, tile)| (Pos(row as isize, col as isize), tile))
+                    })
+                }
+
+                #[allow(dead_code)]
+                pub fn dbg<F, S>(&self, fmt: F)
+                where
+                    F: Fn(&Tile) -> S,
+                    S: std::fmt::Display,
+                {
+                    for row in &self.rows {
+                        for tile in row {
+                            print!("{}", fmt(tile));
+                        }
+                        println!();
+                    }
                 }
             }
         }
@@ -238,7 +319,27 @@ mod lib {
         /// |
         /// |       X <- here
         /// |
-        pub type Pos = (isize, isize);
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        pub struct Pos(pub isize, pub isize);
+        impl Pos {
+            pub fn row(&self) -> isize {
+                self.0
+            }
+
+            pub fn col(&self) -> isize {
+                self.1
+            }
+
+            pub fn step(&self, dir: Dir) -> Pos {
+                let Pos(row, col) = *self;
+                match dir {
+                    Dir::N => Pos(row - 1, col),
+                    Dir::W => Pos(row, col - 1),
+                    Dir::S => Pos(row + 1, col),
+                    Dir::E => Pos(row, col + 1),
+                }
+            }
+        }
 
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum Dir {
@@ -265,6 +366,10 @@ mod lib {
                     Dir::E => Dir::S,
                 }
             }
+
+            pub fn every_direction() -> [Dir; 4] {
+                [Dir::N, Dir::E, Dir::S, Dir::W]
+            }
         }
 
         #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -279,14 +384,9 @@ mod lib {
         }
         impl PosDir {
             pub fn step_forward(&self) -> PosDir {
-                let (row, col) = self.pos;
-                let pos = match self.dir {
-                    Dir::N => (row - 1, col),
-                    Dir::W => (row, col - 1),
-                    Dir::S => (row + 1, col),
-                    Dir::E => (row, col + 1),
-                };
-                PosDir { pos, dir: self.dir }
+                let PosDir { mut pos, dir } = *self;
+                pos = pos.step(dir);
+                PosDir { pos, dir }
             }
 
             pub fn turn_left(&self) -> PosDir {
@@ -302,6 +402,14 @@ mod lib {
                     dir: self.dir.turn_right(),
                 }
             }
+        }
+
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, Default)]
+        pub struct Bounds {
+            pub min_row: isize,
+            pub max_row: isize,
+            pub min_col: isize,
+            pub max_col: isize,
         }
     }
 

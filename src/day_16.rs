@@ -1,35 +1,39 @@
 //! https://adventofcode.com/2023/day/16
 
+use crate::lib::grid;
 use crate::lib::grid::Dir;
-use crate::lib::grid::Grid;
+use crate::lib::grid::Pos;
 use crate::lib::grid::PosDir;
 
 pub fn part_1(input: &str) -> impl std::fmt::Display {
-    let mut grid = Grid::parse_char_grid(input, Tile::new);
-    let pos_dir = PosDir { pos: (0, -1), dir: Dir::E };
+    let mut grid = grid::vec_of_vecs::Grid::parse_char_grid(input, Tile::new);
+    let pos_dir = PosDir {
+        pos: Pos(0, -1),
+        dir: Dir::E,
+    };
     propagate_light(&mut grid, pos_dir);
     grid.into_iter().filter(|(_pos, tile)| tile.is_energized()).count()
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
-    let mut grid = Grid::parse_char_grid(input, Tile::new);
+    let mut grid = grid::vec_of_vecs::Grid::parse_char_grid(input, Tile::new);
     let n_rows = grid.n_rows;
     let n_cols = grid.n_cols;
 
     let north_edge = (0..n_cols).map(|col| PosDir {
-        pos: (-1, col as isize),
+        pos: Pos(-1, col as isize),
         dir: Dir::S,
     });
     let west_edge = (0..n_rows).map(|row| PosDir {
-        pos: (row as isize, -1),
+        pos: Pos(row as isize, -1),
         dir: Dir::E,
     });
     let south_edge = (0..n_cols).map(|col| PosDir {
-        pos: (n_rows as isize, col as isize),
+        pos: Pos(n_rows as isize, col as isize),
         dir: Dir::N,
     });
     let east_edge = (0..n_rows).map(|row| PosDir {
-        pos: (row as isize, n_cols as isize),
+        pos: Pos(row as isize, n_cols as isize),
         dir: Dir::W,
     });
 
@@ -45,7 +49,7 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
         .unwrap()
 }
 
-fn propagate_light(grid: &mut Grid<Tile>, pos_dir: PosDir) {
+fn propagate_light(grid: &mut grid::vec_of_vecs::Grid<Tile>, pos_dir: PosDir) {
     // Push & Pop from a stack, resulting in a DFS.
     let mut pos_dir_stack = vec![pos_dir];
 

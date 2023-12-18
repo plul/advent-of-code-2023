@@ -4,7 +4,6 @@ use crate::lib::graph;
 use crate::lib::graph::shortest_path::cost::Cost;
 use crate::lib::grid;
 use crate::lib::grid::Dir;
-use crate::lib::grid::Grid;
 use crate::lib::grid::Pos;
 use crate::lib::grid::PosDir;
 
@@ -15,10 +14,10 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
         ultra_crucibles: false,
     };
     let start_node = Node {
-        pos_dir: PosDir { pos: (0, 0), dir: Dir::E },
+        pos_dir: PosDir { pos: Pos(0, 0), dir: Dir::E },
         sequential_straight_moves: 0,
     };
-    let end_pos: Pos = (graph.grid.n_rows as isize - 1, graph.grid.n_cols as isize - 1);
+    let end_pos = Pos(graph.grid.n_rows as isize - 1, graph.grid.n_cols as isize - 1);
     let is_end = |node: &Node| node.pos_dir.pos == end_pos;
     graph::shortest_path::dijkstra_min_heap(&graph, start_node, is_end).unwrap()
 }
@@ -27,16 +26,16 @@ pub fn part_2(input: &str) -> impl std::fmt::Display {
     let grid = parse_grid(input);
     let graph = Graph { grid, ultra_crucibles: true };
     let start_node = Node {
-        pos_dir: PosDir { pos: (0, 0), dir: Dir::E },
+        pos_dir: PosDir { pos: Pos(0, 0), dir: Dir::E },
         sequential_straight_moves: 0,
     };
-    let end_pos: Pos = (graph.grid.n_rows as isize - 1, graph.grid.n_cols as isize - 1);
+    let end_pos = Pos(graph.grid.n_rows as isize - 1, graph.grid.n_cols as isize - 1);
     let is_end = |node: &Node| node.pos_dir.pos == end_pos && node.sequential_straight_moves >= 4;
     graph::shortest_path::dijkstra_min_heap(&graph, start_node, is_end).unwrap()
 }
 
 struct Graph {
-    grid: Grid<u8>,
+    grid: grid::vec_of_vecs::Grid<u8>,
     ultra_crucibles: bool,
 }
 impl graph::directed::Graph for Graph {
@@ -107,8 +106,8 @@ impl Cost for Edge {
     }
 }
 
-fn parse_grid(input: &str) -> Grid<u8> {
-    Grid::<u8>::parse_char_grid(input, |c| c.to_digit(10).unwrap() as u8)
+fn parse_grid(input: &str) -> grid::vec_of_vecs::Grid<u8> {
+    grid::vec_of_vecs::Grid::<u8>::parse_char_grid(input, |c| c.to_digit(10).unwrap() as u8)
 }
 
 #[cfg(test)]

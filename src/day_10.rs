@@ -1,5 +1,6 @@
 //! https://adventofcode.com/2023/day/10
 
+use crate::lib::grid::Dir;
 use std::collections::HashSet;
 
 pub fn part_1(input: &str) -> impl std::fmt::Display {
@@ -115,7 +116,7 @@ fn flood(filled: &mut HashSet<Pos>, pipe: &HashSet<Pos>, pos: Pos, bounds: Bound
     }
     filled.insert(pos);
 
-    for new_pos in [Dir::N, Dir::E, Dir::S, Dir::W].into_iter().filter_map(|dir| pos.go(dir, bounds)) {
+    for new_pos in Dir::every_direction().into_iter().filter_map(|dir| pos.go(dir, bounds)) {
         if !filled.contains(&new_pos) && !pipe.contains(&new_pos) {
             flood(filled, pipe, new_pos, bounds);
         }
@@ -262,14 +263,6 @@ struct Bounds {
 
     /// Number of columns in the input
     cols: usize,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Dir {
-    N,
-    E,
-    S,
-    W,
 }
 
 #[cfg(test)]
