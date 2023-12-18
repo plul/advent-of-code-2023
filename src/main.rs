@@ -133,6 +133,7 @@ fn read_input(path: impl AsRef<Path>) -> Result<String, std::io::Error> {
 }
 
 mod my_nom_prelude {
+    pub use crate::lib::nom_ext::complete::parse_isize;
     pub use crate::lib::nom_ext::complete::parse_usize;
     pub use nom::branch::*;
     pub use nom::bytes::complete::*;
@@ -330,17 +331,67 @@ mod lib {
                 self.1
             }
 
+            pub fn set_row(&mut self, row: isize) {
+                self.0 = row;
+            }
+
+            pub fn set_col(&mut self, col: isize) {
+                self.1 = col;
+            }
+
+            pub fn manhattan_distance(&self, to: Pos) -> isize {
+                (self.row() - to.row()).abs() + (self.col() - to.col()).abs()
+            }
+
+            /// Returns a new position a single step in the given direction.
             pub fn step(&self, dir: Dir) -> Pos {
+                self.steps(1, dir)
+            }
+
+            /// Returns a new position n steps in the given direction.
+            pub fn steps(&self, n: isize, dir: Dir) -> Pos {
                 let Pos(row, col) = *self;
                 match dir {
-                    Dir::N => Pos(row - 1, col),
-                    Dir::W => Pos(row, col - 1),
-                    Dir::S => Pos(row + 1, col),
-                    Dir::E => Pos(row, col + 1),
+                    Dir::N => Pos(row - n, col),
+                    Dir::W => Pos(row, col - n),
+                    Dir::S => Pos(row + n, col),
+                    Dir::E => Pos(row, col + n),
                 }
             }
         }
 
+        /// Relative direction.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub enum RelDir {
+            Front,
+            Left,
+            Right,
+            Behind,
+        }
+        impl RelDir {
+            pub fn from_dirs(from: Dir, to: Dir) -> RelDir {
+                match (from, to) {
+                    (Dir::N, Dir::N) => RelDir::Front,
+                    (Dir::N, Dir::W) => RelDir::Left,
+                    (Dir::N, Dir::S) => RelDir::Behind,
+                    (Dir::N, Dir::E) => RelDir::Right,
+                    (Dir::W, Dir::N) => RelDir::Right,
+                    (Dir::W, Dir::W) => RelDir::Front,
+                    (Dir::W, Dir::S) => RelDir::Left,
+                    (Dir::W, Dir::E) => RelDir::Behind,
+                    (Dir::S, Dir::N) => RelDir::Behind,
+                    (Dir::S, Dir::W) => RelDir::Right,
+                    (Dir::S, Dir::S) => RelDir::Front,
+                    (Dir::S, Dir::E) => RelDir::Left,
+                    (Dir::E, Dir::N) => RelDir::Left,
+                    (Dir::E, Dir::W) => RelDir::Behind,
+                    (Dir::E, Dir::S) => RelDir::Right,
+                    (Dir::E, Dir::E) => RelDir::Front,
+                }
+            }
+        }
+
+        /// Direction.
         #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
         pub enum Dir {
             N,
@@ -369,6 +420,17 @@ mod lib {
 
             pub fn every_direction() -> [Dir; 4] {
                 [Dir::N, Dir::E, Dir::S, Dir::W]
+            }
+
+            /// Returns a direction if `to` lies straight N, W, S or E of `from`.
+            pub fn from_positions(from: Pos, to: Pos) -> Option<Dir> {
+                match (to.row() - from.row(), to.col() - from.col()) {
+                    (0, x) if x > 0 => Some(Dir::E),
+                    (0, x) if x < 0 => Some(Dir::W),
+                    (x, 0) if x > 0 => Some(Dir::S),
+                    (x, 0) if x < 0 => Some(Dir::N),
+                    _ => None,
+                }
             }
         }
 
@@ -574,6 +636,10 @@ mod lib {
 
             pub fn parse_usize(s: &str) -> IResult<&str, usize> {
                 map_res(digit1, |s: &str| s.parse::<usize>())(s)
+            }
+
+            pub fn parse_isize(s: &str) -> IResult<&str, isize> {
+                map_res(digit1, |s: &str| s.parse::<isize>())(s)
             }
         }
     }
