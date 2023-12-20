@@ -61,12 +61,7 @@ fn solve(input: Vec<InputLine>) -> impl std::fmt::Display {
                 let c2 = points[2].unwrap();
                 let c3 = points[3].unwrap();
 
-                for p in points.iter().flatten() {
-                    println!("({},{})", p.0, p.1);
-                }
-                dbg!(area);
                 let a = ((c0.row() - c2.row()).abs() + 1) * ((c0.col() - c2.col()).abs() + 1);
-                dbg!(a);
                 area += a;
 
                 continue 'outer_outer;
