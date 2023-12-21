@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use std::collections::VecDeque;
 
 pub fn part_1(input: &str) -> impl std::fmt::Display {
-    let Input { mut modules } = parser::parse(input);
+    let Input { mut modules, input_map: _ } = parser::parse(input);
     let mut events = VecDeque::new();
 
     let mut total = HashMap::<Pulse, usize>::new();
@@ -26,10 +26,10 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
 
             let out: Option<Pulse> = match &mut m.r#type {
                 Type::Broadcaster => Some(pulse),
-                Type::FlipFlop(f) => {
+                Type::FlipFlop { state, inputs: _ } => {
                     if matches!(pulse, Pulse::Low) {
-                        f.toggle();
-                        let p = match f {
+                        state.toggle();
+                        let p = match state {
                             OnOff::On => Pulse::High,
                             OnOff::Off => Pulse::Low,
                         };
@@ -38,11 +38,11 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
                         None
                     }
                 }
-                Type::Conjunction(c) => {
+                Type::Conjunction { inputs } => {
                     let from = from.unwrap();
-                    let entry = c.get_mut(from).unwrap();
+                    let entry = inputs.get_mut(from).unwrap();
                     *entry = pulse;
-                    let p = if c.values().all(|p| matches!(p, Pulse::High)) {
+                    let p = if inputs.values().all(|p| matches!(p, Pulse::High)) {
                         Pulse::Low
                     } else {
                         Pulse::High
@@ -66,7 +66,50 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
+    let input = parser::parse(input);
+
+    // let rx_inputs = &input.input_map["rx"];
+    // for i in rx_inputs {
+    // let cycle = cycle(i, &input);
+    // }
+
     ""
+}
+
+/// Find cycle
+fn cycle<'a>(name: ModuleName<'a>, input: &Input<'a>) -> Cycle {
+    let m = &input.modules[name];
+    match &m.r#type {
+        Type::Broadcaster => Cycle { offset: 0, cycle_len: 1 },
+        Type::FlipFlop { inputs, state: _ } => {
+            for i in inputs {
+                dbg!(i, cycle(i, input));
+            }
+            Cycle {
+                offset: 3,    // todo
+                cycle_len: 3, // todo
+            }
+        }
+        Type::Conjunction { inputs } => {
+            for (i, p) in inputs {
+                dbg!(i, cycle(i, input));
+            }
+
+            Cycle {
+                offset: 4,    // todo
+                cycle_len: 4, // todo
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Cycle {
+    /// Offset from start of simulation until first low pulse.
+    offset: usize,
+
+    /// Cycle length.
+    cycle_len: usize,
 }
 
 #[derive(Debug)]
@@ -79,6 +122,8 @@ struct Event<'a> {
 struct Input<'a> {
     /// Modules, indexed by name.
     modules: HashMap<ModuleName<'a>, Module<'a>>,
+
+    input_map: HashMap<ModuleName<'a>, HashSet<ModuleName<'a>>>,
 }
 
 type ModuleName<'a> = &'a str;
@@ -93,8 +138,8 @@ struct Module<'a> {
 #[derive(Clone, Debug, PartialEq)]
 enum Type<'a> {
     Broadcaster,
-    FlipFlop(OnOff),
-    Conjunction(HashMap<ModuleName<'a>, Pulse>),
+    FlipFlop { inputs: HashSet<ModuleName<'a>>, state: OnOff },
+    Conjunction { inputs: HashMap<ModuleName<'a>, Pulse> },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -125,38 +170,69 @@ mod parser {
     use type_toppings::ResultExt as _;
 
     pub(super) fn parse(s: &str) -> Input {
+        let lines = s
+            .lines()
+            .map(|line| all_consuming(parse_line)(line).expect_or_report(line).1)
+            .collect::<Vec<Line>>();
+
+        let mut input_map: HashMap<ModuleName, HashSet<ModuleName>> = HashMap::new();
+        for line in &lines {
+            for dest in line.destinations.iter() {
+                input_map.entry(dest).or_default().insert(line.name);
+            }
+        }
+
         let mut modules: HashMap<ModuleName, Module> = HashMap::new();
-        let mut inputs: HashMap<ModuleName, HashSet<ModuleName>> = HashMap::new();
-
-        for line in s.lines() {
-            let module = all_consuming(parse_line)(line).expect_or_report(line).1;
-            for dest in module.destinations.iter() {
-                inputs.entry(dest).or_default().insert(module.name);
-            }
-            modules.insert(module.name, module);
+        for line in lines {
+            modules.insert(
+                line.name,
+                Module {
+                    name: line.name,
+                    r#type: match line.r#type {
+                        Type::Broadcaster => super::Type::Broadcaster,
+                        Type::FlipFlop => {
+                            let inputs = input_map.get(line.name).unwrap().clone();
+                            super::Type::FlipFlop {
+                                inputs,
+                                state: OnOff::default(),
+                            }
+                        }
+                        Type::Conjunction => {
+                            let inputs = HashMap::from_iter(input_map.get(&line.name).unwrap().iter().map(|&input| (input, Pulse::Low)));
+                            super::Type::Conjunction { inputs }
+                        }
+                    },
+                    destinations: line.destinations,
+                },
+            );
         }
 
-        for (module_name, module) in modules.iter_mut() {
-            if let Type::Conjunction(c) = &mut module.r#type {
-                for i in inputs.get(module_name).iter().flat_map(|set| set.iter()) {
-                    c.insert(i.to_owned(), Pulse::Low);
-                }
-            }
-        }
-
-        Input { modules }
+        Input { modules, input_map }
     }
 
-    fn parse_line(s: &str) -> IResult<&str, Module> {
+    struct Line<'a> {
+        name: &'a str,
+        r#type: Type,
+        destinations: Vec<&'a str>,
+    }
+
+    #[derive(Clone)]
+    enum Type {
+        Broadcaster,
+        FlipFlop,
+        Conjunction,
+    }
+
+    fn parse_line(s: &str) -> IResult<&str, Line> {
         let (s, (r#type, name)) = alt((
             value((Type::Broadcaster, "broadcaster"), tag("broadcaster")),
-            pair(value(Type::FlipFlop(OnOff::default()), char('%')), alpha1),
-            pair(value(Type::Conjunction(HashMap::default()), char('&')), alpha1),
+            pair(value(Type::FlipFlop, char('%')), alpha1),
+            pair(value(Type::Conjunction, char('&')), alpha1),
         ))(s)?;
         let (s, _) = tag(" -> ")(s)?;
         let (s, destinations) = separated_list1(tag(", "), alpha1)(s)?;
-        let module = Module { name, r#type, destinations };
-        Ok((s, module))
+        let line = Line { name, r#type, destinations };
+        Ok((s, line))
     }
 }
 
