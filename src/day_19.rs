@@ -78,8 +78,8 @@ fn accepted_configurations(workflow_map: &WorkflowMap<'_>, workflow: &Workflow, 
 
     let mut ranges1 = ranges.clone();
     let mut ranges2 = ranges.clone();
-    *&mut ranges1[rule.category] = r1;
-    *&mut ranges2[rule.category] = r2;
+    ranges1[rule.category] = r1;
+    ranges2[rule.category] = r2;
 
     let (passed, failed) = match rule.operator {
         '<' => (ranges1, ranges2),
@@ -260,7 +260,7 @@ mod parser {
         let (s, dest) = alt((
             value(Destination::Accepted, tag("A")),
             value(Destination::Rejected, tag("R")),
-            map(take_while1(|c: char| c.is_lowercase()), |n| Destination::Workflow(n)),
+            map(take_while1(|c: char| c.is_lowercase()), Destination::Workflow),
         ))(s)?;
         Ok((s, dest))
     }

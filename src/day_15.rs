@@ -97,10 +97,7 @@ fn parse_step(step: &str) -> Step<'_> {
     let remove = terminated(alpha1, tag("-"));
     let upsert = separated_pair(alpha1, tag("="), u8);
 
-    let result: IResult<&str, Step> = all_consuming(alt((
-        map(remove, Step::Remove),
-        map(upsert, |(label, lens)| Step::Upsert(label, lens)),
-    )))(step);
+    let result: IResult<&str, Step> = all_consuming(alt((map(remove, Step::Remove), map(upsert, |(label, lens)| Step::Upsert(label, lens)))))(step);
 
     result.expect_or_report(step).1
 }

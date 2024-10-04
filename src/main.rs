@@ -138,7 +138,7 @@ mod my_nom_prelude {
     pub use nom::branch::*;
     pub use nom::bytes::complete::*;
     pub use nom::character::complete::*;
-    pub use nom::character::*;
+    
     pub use nom::combinator::*;
     pub use nom::multi::*;
     pub use nom::sequence::*;
@@ -170,6 +170,12 @@ mod lib {
                     &self.tiles
                 }
             }
+            impl<Tile> Default for Grid<Tile> {
+                fn default() -> Self {
+                    Self::new()
+                }
+            }
+
             impl<Tile> Grid<Tile> {
                 pub fn new() -> Grid<Tile> {
                     Grid {

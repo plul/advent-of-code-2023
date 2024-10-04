@@ -3,7 +3,7 @@
 use crate::lib::grid::Dir;
 use crate::lib::grid::Pos;
 use crate::lib::grid::RelDir;
-use std::cmp::max;
+
 use std::cmp::min;
 use std::collections::VecDeque;
 
@@ -57,9 +57,9 @@ fn solve(input: Vec<InputLine>) -> impl std::fmt::Display {
                 assert_eq!(points.len(), 4);
 
                 let c0 = points[0].unwrap();
-                let c1 = points[1].unwrap();
+                let _c1 = points[1].unwrap();
                 let c2 = points[2].unwrap();
-                let c3 = points[3].unwrap();
+                let _c3 = points[3].unwrap();
 
                 let a = ((c0.row() - c2.row()).abs() + 1) * ((c0.col() - c2.col()).abs() + 1);
                 area += a;
@@ -114,17 +114,17 @@ fn solve(input: Vec<InputLine>) -> impl std::fmt::Display {
                 'alcove: {
                     match (pos_1, pos_2, pos_3, pos_4, pos_5) {
                         (
-                            Some((pos_1, pos_1_idx)),
+                            Some((pos_1, _pos_1_idx)),
                             Some((pos_2, pos_2_idx)),
                             Some((pos_3, pos_3_idx)),
-                            Some((pos_4, pos_4_idx)),
-                            Some((pos_5, pos_5_idx)),
+                            Some((pos_4, _pos_4_idx)),
+                            Some((pos_5, _pos_5_idx)),
                         ) => {
-                            let dist_1 = pos.manhattan_distance(pos_1);
+                            let _dist_1 = pos.manhattan_distance(pos_1);
                             let dist_2 = pos_1.manhattan_distance(pos_2);
-                            let dist_3 = pos_2.manhattan_distance(pos_3);
+                            let _dist_3 = pos_2.manhattan_distance(pos_3);
                             let dist_4 = pos_3.manhattan_distance(pos_4);
-                            let dist_5 = pos_4.manhattan_distance(pos_5);
+                            let _dist_5 = pos_4.manhattan_distance(pos_5);
 
                             let dir_1 = Dir::from_positions(pos_1, pos).unwrap();
                             let dir_2 = Dir::from_positions(pos_2, pos_1).unwrap();
@@ -175,7 +175,7 @@ fn solve(input: Vec<InputLine>) -> impl std::fmt::Display {
                                     *pos_3 = pos_3.steps(dim_1, dir_2);
 
                                     let a = if buff_out {
-                                        -1 * (dim_1) * (dim_2 + 1) + dim_1 * 2
+                                        -(dim_1) * (dim_2 + 1) + dim_1 * 2
                                     } else {
                                         (dim_1) * (dim_2 + 1)
                                     };
@@ -253,7 +253,7 @@ mod parser {
         let (s, _) = space1(s)?;
 
         let (s, _) = tag("(#")(s)?;
-        let (s, steps) = map_res(recognize(count(satisfy(|c| c.is_digit(16)), 5)), |h| isize::from_str_radix(h, 16))(s)?;
+        let (s, steps) = map_res(recognize(count(satisfy(|c| c.is_ascii_hexdigit()), 5)), |h| isize::from_str_radix(h, 16))(s)?;
         let (s, dir) = map_opt(anychar, |c| match c {
             '0' => Some(Dir::E),
             '1' => Some(Dir::S),
@@ -306,6 +306,6 @@ fn part_2_example() {
 
 #[test]
 fn part_2_real() {
-    let input = crate::read_input(format!("day_18.txt")).unwrap();
+    let input = crate::read_input("day_18.txt".to_string()).unwrap();
     assert_eq!(part_2(&input).to_string(), "90111113594927");
 }

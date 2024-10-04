@@ -45,7 +45,7 @@ pub fn solve(input: &str, steps: usize) -> impl std::fmt::Display {
     s2.len()
 }
 
-pub fn part_2(input: &str) -> impl std::fmt::Display {
+pub fn part_2(_input: &str) -> impl std::fmt::Display {
     ""
 }
 

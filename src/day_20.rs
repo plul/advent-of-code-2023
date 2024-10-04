@@ -53,7 +53,7 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
             if let Some(p) = out {
                 for dst in m.destinations.iter() {
                     events.push_back(Event {
-                        from: Some(&m.name),
+                        from: Some(m.name),
                         to: dst,
                         pulse: p,
                     });
@@ -66,7 +66,7 @@ pub fn part_1(input: &str) -> impl std::fmt::Display {
 }
 
 pub fn part_2(input: &str) -> impl std::fmt::Display {
-    let input = parser::parse(input);
+    let _input = parser::parse(input);
 
     // let rx_inputs = &input.input_map["rx"];
     // for i in rx_inputs {
@@ -91,7 +91,7 @@ fn cycle<'a>(name: ModuleName<'a>, input: &Input<'a>) -> Cycle {
             }
         }
         Type::Conjunction { inputs } => {
-            for (i, p) in inputs {
+            for (i, _p) in inputs {
                 dbg!(i, cycle(i, input));
             }
 

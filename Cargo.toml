@@ -12,4 +12,4 @@ gcd = "2.3.0"
 log = "0.4"
 nom = "7.1"
 rayon = "1.8"
-type-toppings = "0.1.1"
+type-toppings = { version = "0.2", features = ["result"] }
